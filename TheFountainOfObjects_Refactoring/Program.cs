@@ -1,7 +1,4 @@
-﻿//Player is in 0,0
-//Fountain is in 0,2
-//Fountain enable/disable
-//Player can move
+﻿//Fountain enable/disable
 //Colors
 
 Map map = new Map();
@@ -22,10 +19,9 @@ public class FountainOfObjectsGame
 
     public void Run()
     {
-        Renderer renderer = new Renderer();
         while (true)
         {
-            renderer.Render(Map);
+            Map.Render(Player);
             Console.WriteLine(Player.Coordinate);
 
             ICommand command = GetCommand();
@@ -80,11 +76,11 @@ public class ActionCommand : ICommand
             Direction.East => new Coordinate(currentCoordinate.row, currentCoordinate.column + 1),
             Direction.West => new Coordinate(currentCoordinate.row, currentCoordinate.column - 1),
         };
-        //
-        //           //if (game.Map.IsOnMap(newCoordinate))
+        
+        if (game.Map.OnMap(newCoordinate))
         game.Player.Coordinate = newCoordinate;
-        //           //else
-        //           //    Console.WriteLine("There is a wall there.");
+        else
+        Console.WriteLine("You cannot go there.");
     }
 }
 
@@ -114,16 +110,24 @@ public class Map
     }
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
-}
 
-public class Renderer
-{
-    public void Render(Map map)
+    public bool OnMap(Coordinate coordinate)
     {
+        if ((coordinate.row == -1) || (coordinate.column == -1)) return false;
+        else if ((coordinate.row == 4) || (coordinate.column == 4)) return false;
+        else return true;
+    }
+
+    public void Render(Player player)
+    {
+        char X = 'X';
+        char Empty = ' ';
         char[,] room = new char[4, 4];
         for (int row = 0; row < 4; row++)
             for (int column = 0; column < 4; column++)
-                room[row, column] = ToChar(map.GetRoom(row, column));
+                if ((player.Coordinate.row == row) && (player.Coordinate.column == column))
+                    room[row, column] = X;
+                else room[row, column] = Empty;
 
         Console.WriteLine($"┌───┬───┬───┬───┐");
         Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │");
@@ -134,18 +138,6 @@ public class Renderer
         Console.WriteLine($"├───┼───┼───┼───┤");
         Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │");
         Console.WriteLine($"└───┴───┴───┴───┘");
-    }
-
-    private char ToChar(Room room)
-    {
-        return room switch
-        {
-            //EntranceRoom => 'O',
-            //FountainRoom => 'X',
-            //EmptyRoom => ' ',
-            //
-            Player.Coordinate => ' ',
-        };
     }
 }
 
