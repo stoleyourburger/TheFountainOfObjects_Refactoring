@@ -1,14 +1,21 @@
-﻿
-
-new FountainOfObjectsGame().Run();
-
+﻿new FountainOfObjectsGame().Run();
+//Console.Write("Choose map size (4, 6, 8): ");
+//int input = Convert.ToInt32(Console.ReadLine());
+//Map map = input switch
+//{
+//    4 => new Map,
+//    6 => new Map(),
+//    8 => new Map(),
+//};
 public class FountainOfObjectsGame
 {
     public Map Map { get; }
     public Player Player { get; }
     public FountainRoom fountainRoom = new FountainRoom();
 
-    public FountainOfObjectsGame()
+
+
+public FountainOfObjectsGame()
     {
         Map = new Map();
         Player = new Player();
@@ -16,18 +23,11 @@ public class FountainOfObjectsGame
 
     public void Run()
     {
-        Console.Write("Choose map size (4, 6, 8) or press any other button for a default map size of 4: ");
-        int input = Convert.ToInt32(Console.ReadLine());
-        switch (input)
-        {
-            case 4: Map._rooms = new Room[4, 4]; break;
-            case 6: Map._rooms = new Room[6, 6]; Map.Rows = 6; Map.Columns = 6; break;
-            case 8: Map._rooms = new Room[8, 8]; Map.Rows = 8; Map.Columns = 8; break;
-            default: Map._rooms = new Room[4, 4]; break;
-        }
-        while (!(Player.IsAlive == true && fountainRoom.IsOn && Player.Coordinate.Row == 0 && Player.Coordinate.Column == 0))
-        {
 
+
+
+        while (!(Player.IsAlive == true && fountainRoom.IsOn && Map.GetRoom(Player.Coordinate) is EntranceRoom))
+        {
             Map.Render(Player);
             Surrounding();
 
@@ -60,17 +60,19 @@ public class FountainOfObjectsGame
     }
     public void Surrounding()
     {
-        if (Map.GetRoom(Player.Coordinate) is EntranceRoom)
+        Room playersRoom = Map.GetRoom(Player.Coordinate);
+
+        if (playersRoom is EntranceRoom)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("You see light in this room coming from outside the cavern. This is the entrance.");
         }
-        else if (Player.Coordinate.Row == 0 && Player.Coordinate.Column == 2 && fountainRoom.IsOff)
+        else if (playersRoom is FountainRoom && fountainRoom.IsOff)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("You hear water dripping in this room. The Fountain of Objects is here!");
         }
-        else if (Player.Coordinate.Row == 0 && Player.Coordinate.Column == 2 && fountainRoom.IsOn)
+        else if (playersRoom is FountainRoom && fountainRoom.IsOn)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("You hear the rushing waters from the Fountain of Objects. It has been reactivated!");
@@ -141,14 +143,23 @@ public class Player
 }
 public class Map
 {
+    private readonly Room[,] _rooms;
 
-    public Room[,] _rooms = new Room[4, 4];
-
-    public int Rows = 4;
-    public int Columns = 4;
+    public int Rows;
+    public int Columns;
 
     public Map()
     {
+        Console.Write("Choose map size (4, 6, 8): ");
+        int input = Convert.ToInt32(Console.ReadLine());
+        switch (input)
+        {
+            case 4: Rows = 4; Columns = 4; break;
+            case 6: Rows = 6; Columns = 6; break;
+            case 8: Rows = 8; Columns = 8; break;
+        }
+
+        _rooms = new Room[Rows, Columns];
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
                 _rooms[row, column] = new EmptyRoom();
@@ -156,7 +167,9 @@ public class Map
         _rooms[0, 0] = new EntranceRoom();
         _rooms[0, 2] = new FountainRoom();
         _rooms[2, 1] = new PitRoom();
+
     }
+    
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
     public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
@@ -178,6 +191,7 @@ public class Map
                 if ((player.Coordinate.Row == row) && (player.Coordinate.Column == column))
                     room[row, column] = X;
                 else room[row, column] = Empty;
+
         if (_rooms.Length == 16)
         {
             Console.ForegroundColor = ConsoleColor.Green;
