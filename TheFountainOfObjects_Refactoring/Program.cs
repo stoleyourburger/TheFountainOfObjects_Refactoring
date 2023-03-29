@@ -1,21 +1,12 @@
 ﻿new FountainOfObjectsGame().Run();
-//Console.Write("Choose map size (4, 6, 8): ");
-//int input = Convert.ToInt32(Console.ReadLine());
-//Map map = input switch
-//{
-//    4 => new Map,
-//    6 => new Map(),
-//    8 => new Map(),
-//};
+
 public class FountainOfObjectsGame
 {
     public Map Map { get; }
     public Player Player { get; }
     public FountainRoom fountainRoom = new FountainRoom();
 
-
-
-public FountainOfObjectsGame()
+    public FountainOfObjectsGame()
     {
         Map = new Map();
         Player = new Player();
@@ -23,9 +14,6 @@ public FountainOfObjectsGame()
 
     public void Run()
     {
-
-
-
         while (!(Player.IsAlive == true && fountainRoom.IsOn && Map.GetRoom(Player.Coordinate) is EntranceRoom))
         {
             Map.Render(Player);
@@ -48,15 +36,13 @@ public FountainOfObjectsGame()
                     if (input == "on") return new EnableFountain();
                     if (input == "off") return new DisableFountain();
                     Console.WriteLine($"I did not understand '{input}'.");
-                }
+                }   
             }
         }
         Map.Render(Player);
-        Console.BackgroundColor = ConsoleColor.White;
-        Console.ForegroundColor = ConsoleColor.Green;
+        Console.BackgroundColor = ConsoleColor.White; Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Congratulations! You won!");
-        Console.BackgroundColor = ConsoleColor.Black;
-        Console.ForegroundColor = ConsoleColor.White;
+        Console.BackgroundColor = ConsoleColor.Black; Console.ForegroundColor = ConsoleColor.White;
     }
     public void Surrounding()
     {
@@ -169,7 +155,7 @@ public class Map
         _rooms[2, 1] = new PitRoom();
 
     }
-    
+
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
     public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
