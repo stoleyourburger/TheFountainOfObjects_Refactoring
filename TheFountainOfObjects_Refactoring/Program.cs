@@ -1,7 +1,16 @@
-﻿//Fountain enable/disable
-//Colors
-
+﻿
 Map map = new Map();
+
+Console.Write("Choose map size (4, 6, 8) or press any other button for a default map size of 4: ");
+int input = Convert.ToInt32(Console.ReadLine());
+switch (input)
+{
+    case 4: map._rooms = new Room[4, 4]; break;
+    case 6: map._rooms = new Room[6, 6]; map.Rows = 6; map.Columns = 6; break;
+    case 8: map._rooms = new Room[8, 8]; map.Rows = 8; map.Columns = 8; break;
+    default: break;
+}
+
 Player player = new Player();
 FountainOfObjectsGame game = new FountainOfObjectsGame(map, player);
 game.Run();
@@ -20,7 +29,7 @@ public class FountainOfObjectsGame
 
     public void Run()
     {
-        while (!(Player.IsAlive == true && fountainRoom.IsOn && Player.Coordinate.row == 0 && Player.Coordinate.column ==0))
+        while (!(Player.IsAlive == true && fountainRoom.IsOn && Player.Coordinate.row == 0 && Player.Coordinate.column == 0))
         {
             Map.Render(Player);
             Surrounding();
@@ -49,7 +58,7 @@ public class FountainOfObjectsGame
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("Congratulations! You won!");
-        Console.BackgroundColor= ConsoleColor.Black;
+        Console.BackgroundColor = ConsoleColor.Black;
         Console.ForegroundColor = ConsoleColor.White;
     }
     public void Surrounding()
@@ -71,13 +80,10 @@ public class FountainOfObjectsGame
         }
     }
 }
-
-
 public interface ICommand
 {
     void Execute(FountainOfObjectsGame game);
 }
-
 public class EnableFountain : ICommand
 {
     public void Execute(FountainOfObjectsGame game)
@@ -87,7 +93,6 @@ public class EnableFountain : ICommand
         fountainRoom.IsOn = true;
     }
 }
-
 public class DisableFountain : ICommand
 {
     public void Execute(FountainOfObjectsGame game)
@@ -97,7 +102,6 @@ public class DisableFountain : ICommand
         fountainRoom.IsOn = false;
     }
 }
-
 public class Move : ICommand
 {
     public Direction Direction { get; }
@@ -120,16 +124,14 @@ public class Move : ICommand
         };
         Console.Clear();
         if (game.Map.OnMap(newCoordinate))
-        game.Player.Coordinate = newCoordinate;
-        else 
-        { 
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("You cannot go there.");
+            game.Player.Coordinate = newCoordinate;
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("You cannot go there.");
         }
-        
     }
 }
-
 public class Player
 {
     public Coordinate Coordinate { get; set; }
@@ -141,12 +143,13 @@ public class Player
         IsAlive = true;
     }
 }
-
 public class Map
 {
-    private Room[,] _rooms = new Room[4, 4];
-    private int Rows = 4;
-    private int Columns = 4;
+
+    public Room[,] _rooms = new Room[4, 4];
+
+    public int Rows = 4;
+    public int Columns = 4;
 
     public Map()
     {
@@ -163,7 +166,7 @@ public class Map
     public bool OnMap(Coordinate coordinate)
     {
         if ((coordinate.row == -1) || (coordinate.column == -1)) return false;
-        else if ((coordinate.row == 4) || (coordinate.column == 4)) return false;
+        else if ((coordinate.row == Rows) || (coordinate.column == Columns)) return false;
         else return true;
     }
 
@@ -171,22 +174,63 @@ public class Map
     {
         char X = 'X';
         char Empty = ' ';
-        char[,] room = new char[4, 4];
-        for (int row = 0; row < 4; row++)
-            for (int column = 0; column < 4; column++)
+        char[,] room = new char[Rows, Columns];
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
                 if ((player.Coordinate.row == row) && (player.Coordinate.column == column))
                     room[row, column] = X;
                 else room[row, column] = Empty;
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"┌───┬───┬───┬───┐" );
-        Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │  {player.Coordinate}");
-        Console.WriteLine($"├───┼───┼───┼───┤");
-        Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │  Possible input:");
-        Console.WriteLine($"├───┼───┼───┼───┤  n / s / e / w");
-        Console.WriteLine($"│ {room[2, 0]} │ {room[2, 1]} │ {room[2, 2]} │ {room[2, 3]} │  When in fountain room:");
-        Console.WriteLine($"├───┼───┼───┼───┤  on / off ");
-        Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │");
-        Console.WriteLine($"└───┴───┴───┴───┘");
+        if (_rooms.Length == 16)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"┌───┬───┬───┬───┐");
+            Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │  {player.Coordinate}");
+            Console.WriteLine($"├───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │  Possible input:");
+            Console.WriteLine($"├───┼───┼───┼───┤  n / s / e / w");
+            Console.WriteLine($"│ {room[2, 0]} │ {room[2, 1]} │ {room[2, 2]} │ {room[2, 3]} │  When in fountain room:");
+            Console.WriteLine($"├───┼───┼───┼───┤  on / off ");
+            Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │");
+            Console.WriteLine($"└───┴───┴───┴───┘");
+        }
+        else if (_rooms.Length == 36)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"┌───┬───┬───┬───┬───┬───┐");
+            Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │ {room[0, 4]} │ {room[0, 5]} │  {player.Coordinate}");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │ {room[1, 4]} │ {room[1, 5]} │  Possible input:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  n / s / e / w");
+            Console.WriteLine($"│ {room[2, 0]} │ {room[2, 1]} │ {room[2, 2]} │ {room[2, 3]} │ {room[2, 4]} │ {room[2, 5]} │  When in fountain room:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  on / off ");
+            Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │ {room[3, 4]} │ {room[3, 5]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[4, 0]} │ {room[4, 1]} │ {room[4, 2]} │ {room[4, 3]} │ {room[4, 4]} │ {room[4, 5]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[5, 0]} │ {room[5, 1]} │ {room[5, 2]} │ {room[5, 3]} │ {room[5, 4]} │ {room[5, 5]} │");
+            Console.WriteLine($"└───┴───┴───┴───┴───┴───┘");
+        }
+        else if (_rooms.Length == 64)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"┌───┬───┬───┬───┬───┬───┬───┬───┐");
+            Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │ {room[0, 4]} │ {room[0, 5]} │ {room[0, 6]} │ {room[0, 7]} │  {player.Coordinate}");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │ {room[1, 4]} │ {room[1, 5]} │ {room[1, 6]} │ {room[1, 7]} │  Possible input:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤  n / s / e / w");
+            Console.WriteLine($"│ {room[2, 0]} │ {room[2, 1]} │ {room[2, 2]} │ {room[2, 3]} │ {room[2, 4]} │ {room[2, 5]} │ {room[2, 6]} │ {room[2, 7]} │  When in fountain room:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤  on / off ");
+            Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │ {room[3, 4]} │ {room[3, 5]} │ {room[3, 6]} │ {room[3, 7]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[4, 0]} │ {room[4, 1]} │ {room[4, 2]} │ {room[4, 3]} │ {room[4, 4]} │ {room[4, 5]} │ {room[4, 6]} │ {room[4, 7]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[5, 0]} │ {room[5, 1]} │ {room[5, 2]} │ {room[5, 3]} │ {room[5, 4]} │ {room[5, 5]} │ {room[5, 6]} │ {room[5, 7]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[6, 0]} │ {room[6, 1]} │ {room[6, 2]} │ {room[6, 3]} │ {room[6, 4]} │ {room[6, 5]} │ {room[6, 6]} │ {room[6, 7]} │");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[7, 0]} │ {room[7, 1]} │ {room[7, 2]} │ {room[7, 3]} │ {room[7, 4]} │ {room[7, 5]} │ {room[7, 6]} │ {room[7, 7]} │");
+            Console.WriteLine($"└───┴───┴───┴───┴───┴───┴───┴───┘");
+        }
     }
 }
 
