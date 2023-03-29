@@ -1,19 +1,6 @@
 ﻿
-Map map = new Map();
 
-Console.Write("Choose map size (4, 6, 8) or press any other button for a default map size of 4: ");
-int input = Convert.ToInt32(Console.ReadLine());
-switch (input)
-{
-    case 4: map._rooms = new Room[4, 4]; break;
-    case 6: map._rooms = new Room[6, 6]; map.Rows = 6; map.Columns = 6; break;
-    case 8: map._rooms = new Room[8, 8]; map.Rows = 8; map.Columns = 8; break;
-    default: break;
-}
-
-Player player = new Player();
-FountainOfObjectsGame game = new FountainOfObjectsGame(map, player);
-game.Run();
+new FountainOfObjectsGame().Run();
 
 public class FountainOfObjectsGame
 {
@@ -21,16 +8,26 @@ public class FountainOfObjectsGame
     public Player Player { get; }
     public FountainRoom fountainRoom = new FountainRoom();
 
-    public FountainOfObjectsGame(Map map, Player player)
+    public FountainOfObjectsGame()
     {
-        Map = map;
-        Player = player;
+        Map = new Map();
+        Player = new Player();
     }
 
     public void Run()
     {
-        while (!(Player.IsAlive == true && fountainRoom.IsOn && Player.Coordinate.row == 0 && Player.Coordinate.column == 0))
+        Console.Write("Choose map size (4, 6, 8) or press any other button for a default map size of 4: ");
+        int input = Convert.ToInt32(Console.ReadLine());
+        switch (input)
         {
+            case 4: Map._rooms = new Room[4, 4]; break;
+            case 6: Map._rooms = new Room[6, 6]; Map.Rows = 6; Map.Columns = 6; break;
+            case 8: Map._rooms = new Room[8, 8]; Map.Rows = 8; Map.Columns = 8; break;
+            default: Map._rooms = new Room[4, 4]; break;
+        }
+        while (!(Player.IsAlive == true && fountainRoom.IsOn && Player.Coordinate.Row == 0 && Player.Coordinate.Column == 0))
+        {
+
             Map.Render(Player);
             Surrounding();
 
@@ -63,17 +60,17 @@ public class FountainOfObjectsGame
     }
     public void Surrounding()
     {
-        if (Player.Coordinate.row == 0 && Player.Coordinate.column == 0)
+        if (Map.GetRoom(Player.Coordinate) is EntranceRoom)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("You see light in this room coming from outside the cavern. This is the entrance.");
         }
-        else if (Player.Coordinate.row == 0 && Player.Coordinate.column == 2 && fountainRoom.IsOff)
+        else if (Player.Coordinate.Row == 0 && Player.Coordinate.Column == 2 && fountainRoom.IsOff)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("You hear water dripping in this room. The Fountain of Objects is here!");
         }
-        else if (Player.Coordinate.row == 0 && Player.Coordinate.column == 2 && fountainRoom.IsOn)
+        else if (Player.Coordinate.Row == 0 && Player.Coordinate.Column == 2 && fountainRoom.IsOn)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("You hear the rushing waters from the Fountain of Objects. It has been reactivated!");
@@ -116,10 +113,10 @@ public class Move : ICommand
         Coordinate currentCoordinate = game.Player.Coordinate;
         Coordinate newCoordinate = Direction switch
         {
-            Direction.North => new Coordinate(currentCoordinate.row - 1, currentCoordinate.column),
-            Direction.South => new Coordinate(currentCoordinate.row + 1, currentCoordinate.column),
-            Direction.East => new Coordinate(currentCoordinate.row, currentCoordinate.column + 1),
-            Direction.West => new Coordinate(currentCoordinate.row, currentCoordinate.column - 1),
+            Direction.North => new Coordinate(currentCoordinate.Row - 1, currentCoordinate.Column),
+            Direction.South => new Coordinate(currentCoordinate.Row + 1, currentCoordinate.Column),
+            Direction.East => new Coordinate(currentCoordinate.Row, currentCoordinate.Column + 1),
+            Direction.West => new Coordinate(currentCoordinate.Row, currentCoordinate.Column - 1),
             _ => throw new NotImplementedException(),
         };
         Console.Clear();
@@ -134,12 +131,11 @@ public class Move : ICommand
 }
 public class Player
 {
-    public Coordinate Coordinate { get; set; }
+    public Coordinate Coordinate { get; set; } = new Coordinate(0, 0);
     public bool IsAlive { get; set; }
 
     public Player()
     {
-        Coordinate = new Coordinate(0, 0);
         IsAlive = true;
     }
 }
@@ -159,14 +155,16 @@ public class Map
 
         _rooms[0, 0] = new EntranceRoom();
         _rooms[0, 2] = new FountainRoom();
+        _rooms[2, 1] = new PitRoom();
     }
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
+    public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
 
     public bool OnMap(Coordinate coordinate)
     {
-        if ((coordinate.row == -1) || (coordinate.column == -1)) return false;
-        else if ((coordinate.row == Rows) || (coordinate.column == Columns)) return false;
+        if ((coordinate.Row == -1) || (coordinate.Column == -1)) return false;
+        else if ((coordinate.Row == Rows) || (coordinate.Column == Columns)) return false;
         else return true;
     }
 
@@ -177,7 +175,7 @@ public class Map
         char[,] room = new char[Rows, Columns];
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
-                if ((player.Coordinate.row == row) && (player.Coordinate.column == column))
+                if ((player.Coordinate.Row == row) && (player.Coordinate.Column == column))
                     room[row, column] = X;
                 else room[row, column] = Empty;
         if (_rooms.Length == 16)
@@ -242,12 +240,16 @@ public class FountainRoom : Room
     public bool IsOn { get; set; }
     public bool IsOff => !IsOn;
 }
+public class PitRoom : Room
+{
 
-public record Coordinate(int row, int column)
+}
+
+public record Coordinate(int Row, int Column)
 {
     public sealed override string ToString()
     {
-        return $"You are at ({row}, {column})";
+        return $"You are at ({Row}, {Column})";
     }
 }
 public enum Direction { North, South, East, West }
