@@ -1,27 +1,46 @@
-﻿new FountainOfObjectsGame().Run();
+﻿using System.Data;
+using System.Numerics;
+
+new FountainOfObjectsGame().Run();
 
 public class FountainOfObjectsGame
 {
     public Map Map { get; }
     public Player Player { get; }
+    public Sense Sense { get; }
     public FountainRoom fountainRoom = new FountainRoom();
 
     public FountainOfObjectsGame()
     {
         Map = new Map();
         Player = new Player();
+        Sense = new Sense();
     }
 
     public void Run()
     {
-        while (!(Player.IsAlive == true && fountainRoom.IsOn && Map.GetRoom(Player.Coordinate) is EntranceRoom))
+        while (true)
         {
             Map.Render(Player);
-            Surrounding();
+
+            if (Player.IsAlive == false)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("LOL, you died!");
+                Console.ForegroundColor = ConsoleColor.White;
+                break;
+            }
+
+            else if (Player.IsAlive == true && fountainRoom.IsOn && Map.GetRoom(Player.Coordinate) is EntranceRoom)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Congratulations! You won!");
+                Console.ForegroundColor = ConsoleColor.White;
+                break;
+            }
 
             ICommand command = GetCommand();
             command.Execute(this);
-
             ICommand GetCommand()
             {
                 while (true)
@@ -36,35 +55,52 @@ public class FountainOfObjectsGame
                     if (input == "on") return new EnableFountain();
                     if (input == "off") return new DisableFountain();
                     Console.WriteLine($"I did not understand '{input}'.");
-                }   
+                }
             }
+
+            Sense.SenseCheck(this, Player);
+
         }
-        Map.Render(Player);
-        Console.BackgroundColor = ConsoleColor.White; Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("Congratulations! You won!");
-        Console.BackgroundColor = ConsoleColor.Black; Console.ForegroundColor = ConsoleColor.White;
     }
-    public void Surrounding()
+}
+public interface ISense
+{
+    void SenseCheck(FountainOfObjectsGame game, Player player);
+}
+public class Sense : ISense
+{
+    public void SenseCheck(FountainOfObjectsGame game, Player player)
     {
-        Room playersRoom = Map.GetRoom(Player.Coordinate);
+        Room playersRoom = game.Map.GetRoom(player.Coordinate);
 
         if (playersRoom is EntranceRoom)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("You see light in this room coming from outside the cavern. This is the entrance.");
         }
-        else if (playersRoom is FountainRoom && fountainRoom.IsOff)
+        else if (playersRoom is FountainRoom && game.fountainRoom.IsOff)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("You hear water dripping in this room. The Fountain of Objects is here!");
         }
-        else if (playersRoom is FountainRoom && fountainRoom.IsOn)
+        else if (playersRoom is FountainRoom && game.fountainRoom.IsOn)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("You hear the rushing waters from the Fountain of Objects. It has been reactivated!");
         }
+
+        if (playersRoom is PitRoom)
+        {
+            player.IsAlive = false;
+        }
+
+        if (playersRoom is PitRoomVicinity)
+        {
+            Console.WriteLine("You feel strong wind from a pit nearby.");
+        }
     }
 }
+
 public interface ICommand
 {
     void Execute(FountainOfObjectsGame game);
@@ -151,7 +187,7 @@ public class Map
                 _rooms[row, column] = new EmptyRoom();
 
         _rooms[0, 0] = new EntranceRoom();
-        
+
         if (input == 4)
         {
             _rooms[0, 2] = new FountainRoom();
@@ -161,13 +197,32 @@ public class Map
         {
             _rooms[0, 4] = new FountainRoom();
             _rooms[4, 2] = new PitRoom();
+            _rooms[1, 5] = new PitRoom();
         }
 
         else if (input == 8)
         {
             _rooms[0, 6] = new FountainRoom();
-            _rooms[6, 4] = new PitRoom();
+            _rooms[1, 4] = new PitRoom();
+            _rooms[3, 3] = new PitRoom();
+            _rooms[4, 7] = new PitRoom();
         }
+
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
+                if (_rooms[row, column] is PitRoom)
+                {
+                    
+                    try { _rooms[row - 1, column - 1] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row - 1, column] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row - 1, column + 1] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row, column - 1] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row, column + 1] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column - 1] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column] = new PitRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column + 1] = new PitRoomVicinity(); } catch { }
+
+                }
 
     }
 
@@ -255,10 +310,8 @@ public class FountainRoom : Room
     public bool IsOn { get; set; }
     public bool IsOff => !IsOn;
 }
-public class PitRoom : Room
-{
-
-}
+public class PitRoom : Room { }
+public class PitRoomVicinity : Room { }
 
 public record Coordinate(int Row, int Column)
 {
