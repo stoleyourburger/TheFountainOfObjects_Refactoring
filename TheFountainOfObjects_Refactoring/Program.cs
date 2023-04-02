@@ -151,8 +151,23 @@ public class Map
                 _rooms[row, column] = new EmptyRoom();
 
         _rooms[0, 0] = new EntranceRoom();
-        _rooms[0, 2] = new FountainRoom();
-        _rooms[2, 1] = new PitRoom();
+        
+        if (input == 4)
+        {
+            _rooms[0, 2] = new FountainRoom();
+            _rooms[2, 1] = new PitRoom();
+        }
+        else if (input == 6)
+        {
+            _rooms[0, 4] = new FountainRoom();
+            _rooms[4, 2] = new PitRoom();
+        }
+
+        else if (input == 8)
+        {
+            _rooms[0, 6] = new FountainRoom();
+            _rooms[6, 4] = new PitRoom();
+        }
 
     }
 
