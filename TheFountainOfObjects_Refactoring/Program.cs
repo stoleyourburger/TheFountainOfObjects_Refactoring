@@ -1,4 +1,5 @@
-﻿new FountainOfObjectsGame().Run();
+﻿
+new FountainOfObjectsGame().Run();
 
 public class FountainOfObjectsGame
 {
@@ -54,7 +55,6 @@ public class FountainOfObjectsGame
                     Console.WriteLine($"I did not understand '{input}'.");
                 }
             }
-            Room currentRoom = Map.GetRoom(Player.Coordinate);
             Sense.SenseCheck(this, Player);
         }
     }
@@ -89,7 +89,7 @@ public class Sense : ISense
         {
             player.IsAlive = false;
         }
-        
+
         if (game.Map.PitInVicinity(player, playersRoom) == true)
         {
             Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
@@ -100,6 +100,34 @@ public class Sense : ISense
             Console.WriteLine("You hear the growling and groaning of a maelstrom nearby.");
         }
 
+        if (playersRoom is MaelstromRoom)
+        {
+            game.Map.MaelstromMove(player);
+            Coordinate currentCoordinate = game.Player.Coordinate;
+            Coordinate newCoordinate = new Coordinate(currentCoordinate.Row - 1, currentCoordinate.Column + 2);
+
+            if (game.Map.OnMap(newCoordinate))
+                game.Player.Coordinate = newCoordinate;
+            else
+            {
+                newCoordinate = new Coordinate(currentCoordinate.Row - 1, currentCoordinate.Column + 1);
+                if (game.Map.OnMap(newCoordinate))
+                    game.Player.Coordinate = newCoordinate;
+                else
+                {
+                    newCoordinate = new Coordinate(currentCoordinate.Row - 1, currentCoordinate.Column);
+                    if (game.Map.OnMap(newCoordinate))
+                        game.Player.Coordinate = newCoordinate;
+                    else
+                    {
+                        game.Player.Coordinate = new Coordinate(0, 0);
+                    }
+                }
+            }
+            
+            Console.WriteLine("You got into maelstrom! Check where you happen to be now...");
+
+        }
     }
 }
 
@@ -183,7 +211,6 @@ public class Map
             case 8: Rows = 8; Columns = 8; break;
         }
 
-
         _rooms = new Room[Rows, Columns];
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
@@ -198,12 +225,10 @@ public class Map
         }
         else if (input == 6)
         {
-            _rooms[0, 4] = new FountainRoom();
-            _rooms[4, 2] = new PitRoom();
-            _rooms[1, 5] = new PitRoom();
-            _rooms[1, 3] = new MaelstromRoom();
+            _rooms[5, 0] = new FountainRoom();
+            _rooms[5, 5] = new PitRoom();
+            _rooms[0, 5] = new MaelstromRoom();
         }
-
         else if (input == 8)
         {
             _rooms[0, 6] = new FountainRoom();
@@ -243,10 +268,38 @@ public class Map
                 }
     }
 
+    public void MaelstromMove(Player player)
+    {
+        Room playersRoom = GetRoom(player.Coordinate);
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
+            {
+                try { _rooms[row, column].IsAdjacentToMaelstromRoom = false; } catch { }
+
+                if ((_rooms[row, column] is MaelstromRoom) && (playersRoom is MaelstromRoom))
+                {
+
+                    _rooms[row, column] = new EmptyRoom();
+                    row = row + 1;
+                    column = column - 2;
+
+                    //try { _rooms[row, column] = new MaelstromRoom(); } catch { }
+                    if (row < 0 || column < 0)
+                    {
+                        _rooms[0, 5] = new MaelstromRoom();
+                    }
+                    else
+                    {
+                        SetRoom(row, column, new MaelstromRoom());
+                    }
+                }
+            }
+    }
+
     public bool PitInVicinity(Player player, Room room)
     {
         Room playersRoom = GetRoom(player.Coordinate);
-        if ((playersRoom == room) && (room.IsAdjacentToPitRoom == true)) 
+        if ((playersRoom == room) && (room.IsAdjacentToPitRoom == true))
             return true;
         return false;
     }
@@ -261,11 +314,15 @@ public class Map
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
     public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
+    public Room SetRoom(int row, int column, Room room)
+    {
+        return _rooms[row, column] = room;
+    }
 
     public bool OnMap(Coordinate coordinate)
     {
-        if ((coordinate.Row == -1) || (coordinate.Column == -1)) return false;
-        else if ((coordinate.Row == Rows) || (coordinate.Column == Columns)) return false;
+        if ((coordinate.Row <= -1) || (coordinate.Column <= -1)) return false;
+        else if ((coordinate.Row >= Rows) || (coordinate.Column >= Columns)) return false;
         else return true;
     }
     public void Render(Player player)
