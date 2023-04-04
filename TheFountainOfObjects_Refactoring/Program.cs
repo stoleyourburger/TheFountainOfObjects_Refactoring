@@ -18,7 +18,6 @@ public class FountainOfObjectsGame
     {
         while (true)
         {
-            Console.WriteLine(Map.GetRoom(2, 1));
             Map.Render(Player);
 
             if (Player.IsAlive == false)
@@ -55,9 +54,8 @@ public class FountainOfObjectsGame
                     Console.WriteLine($"I did not understand '{input}'.");
                 }
             }
-
+            Room currentRoom = Map.GetRoom(Player.Coordinate);
             Sense.SenseCheck(this, Player);
-
         }
     }
 }
@@ -91,13 +89,13 @@ public class Sense : ISense
         {
             player.IsAlive = false;
         }
-
-        if (playersRoom is PitRoomVicinity)
+        
+        if (game.Map.PitInVicinity(player, playersRoom) == true)
         {
-            Console.WriteLine("You feel strong wind from a pit nearby.");
+            Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
         }
 
-        if (playersRoom is MaelstromRoomVicinity)
+        if (game.Map.MaelstromInVicinity(player, playersRoom) == true)
         {
             Console.WriteLine("You hear the growling and groaning of a maelstrom nearby.");
         }
@@ -218,36 +216,48 @@ public class Map
             for (int column = 0; column < Columns; column++)
                 if (_rooms[row, column] is PitRoom)
                 {
-
-
-                    try { _rooms[row - 1, column - 1] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row - 1, column] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row - 1, column + 1] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row, column - 1] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row, column + 1] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column - 1] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column] = new PitRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column + 1] = new PitRoomVicinity(); } catch { }
-
+                    try { _rooms[row - 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row - 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row - 1, column].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row - 1, column + 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row, column - 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row, column + 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row + 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row + 1, column].IsAdjacentToPitRoom = true; } catch { }
+                    try { _rooms[row + 1, column + 1].IsAdjacentToPitRoom = true; } catch { }
                 }
 
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
                 if (_rooms[row, column] is MaelstromRoom)
                 {
-
-                    try { _rooms[row - 1, column - 1] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row - 1, column] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row - 1, column + 1] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row, column - 1] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row, column + 1] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column - 1] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column] = new MaelstromRoomVicinity(); } catch { }
-                    try { _rooms[row + 1, column + 1] = new MaelstromRoomVicinity(); } catch { }
-
+                    try { _rooms[row - 1, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row - 1, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row - 1, column].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row - 1, column + 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row, column + 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row + 1, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row + 1, column].IsAdjacentToMaelstromRoom = true; } catch { }
+                    try { _rooms[row + 1, column + 1].IsAdjacentToMaelstromRoom = true; } catch { }
                 }
     }
 
+    public bool PitInVicinity(Player player, Room room)
+    {
+        Room playersRoom = GetRoom(player.Coordinate);
+        if ((playersRoom == room) && (room.IsAdjacentToPitRoom == true)) 
+            return true;
+        return false;
+    }
+
+    public bool MaelstromInVicinity(Player player, Room room)
+    {
+        Room playersRoom = GetRoom(player.Coordinate);
+        if ((playersRoom == room) && (room.IsAdjacentToMaelstromRoom == true))
+            return true;
+        return false;
+    }
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
     public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
@@ -258,7 +268,6 @@ public class Map
         else if ((coordinate.Row == Rows) || (coordinate.Column == Columns)) return false;
         else return true;
     }
-
     public void Render(Player player)
     {
         char X = 'X';
@@ -324,7 +333,11 @@ public class Map
     }
 }
 
-public abstract class Room { }
+public abstract class Room
+{
+    public bool IsAdjacentToPitRoom { get; set; }
+    public bool IsAdjacentToMaelstromRoom { get; set; }
+}
 public class EmptyRoom : Room { }
 public class EntranceRoom : Room { }
 public class FountainRoom : Room
@@ -333,9 +346,7 @@ public class FountainRoom : Room
     public bool IsOff => !IsOn;
 }
 public class PitRoom : Room { }
-public class PitRoomVicinity : Room { }
 public class MaelstromRoom : Room { }
-public class MaelstromRoomVicinity : Room { }
 
 public record Coordinate(int Row, int Column)
 {
