@@ -1,7 +1,4 @@
-﻿using System.Data;
-using System.Numerics;
-
-new FountainOfObjectsGame().Run();
+﻿new FountainOfObjectsGame().Run();
 
 public class FountainOfObjectsGame
 {
@@ -21,6 +18,7 @@ public class FountainOfObjectsGame
     {
         while (true)
         {
+            Console.WriteLine(Map.GetRoom(2, 1));
             Map.Render(Player);
 
             if (Player.IsAlive == false)
@@ -98,6 +96,12 @@ public class Sense : ISense
         {
             Console.WriteLine("You feel strong wind from a pit nearby.");
         }
+
+        if (playersRoom is MaelstromRoomVicinity)
+        {
+            Console.WriteLine("You hear the growling and groaning of a maelstrom nearby.");
+        }
+
     }
 }
 
@@ -181,6 +185,7 @@ public class Map
             case 8: Rows = 8; Columns = 8; break;
         }
 
+
         _rooms = new Room[Rows, Columns];
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
@@ -198,6 +203,7 @@ public class Map
             _rooms[0, 4] = new FountainRoom();
             _rooms[4, 2] = new PitRoom();
             _rooms[1, 5] = new PitRoom();
+            _rooms[1, 3] = new MaelstromRoom();
         }
 
         else if (input == 8)
@@ -212,7 +218,8 @@ public class Map
             for (int column = 0; column < Columns; column++)
                 if (_rooms[row, column] is PitRoom)
                 {
-                    
+
+
                     try { _rooms[row - 1, column - 1] = new PitRoomVicinity(); } catch { }
                     try { _rooms[row - 1, column] = new PitRoomVicinity(); } catch { }
                     try { _rooms[row - 1, column + 1] = new PitRoomVicinity(); } catch { }
@@ -224,6 +231,21 @@ public class Map
 
                 }
 
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
+                if (_rooms[row, column] is MaelstromRoom)
+                {
+
+                    try { _rooms[row - 1, column - 1] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row - 1, column] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row - 1, column + 1] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row, column - 1] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row, column + 1] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column - 1] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column] = new MaelstromRoomVicinity(); } catch { }
+                    try { _rooms[row + 1, column + 1] = new MaelstromRoomVicinity(); } catch { }
+
+                }
     }
 
 
@@ -312,6 +334,8 @@ public class FountainRoom : Room
 }
 public class PitRoom : Room { }
 public class PitRoomVicinity : Room { }
+public class MaelstromRoom : Room { }
+public class MaelstromRoomVicinity : Room { }
 
 public record Coordinate(int Row, int Column)
 {
