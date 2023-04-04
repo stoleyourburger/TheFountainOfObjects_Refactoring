@@ -242,7 +242,6 @@ public class Map
                 if (_rooms[row, column] is PitRoom)
                 {
                     try { _rooms[row - 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
-                    try { _rooms[row - 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
                     try { _rooms[row - 1, column].IsAdjacentToPitRoom = true; } catch { }
                     try { _rooms[row - 1, column + 1].IsAdjacentToPitRoom = true; } catch { }
                     try { _rooms[row, column - 1].IsAdjacentToPitRoom = true; } catch { }
@@ -252,11 +251,15 @@ public class Map
                     try { _rooms[row + 1, column + 1].IsAdjacentToPitRoom = true; } catch { }
                 }
 
+        SetUpMaelstromVicinity();
+    }
+
+    public void SetUpMaelstromVicinity()
+    {
         for (int row = 0; row < Rows; row++)
             for (int column = 0; column < Columns; column++)
                 if (_rooms[row, column] is MaelstromRoom)
                 {
-                    try { _rooms[row - 1, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
                     try { _rooms[row - 1, column - 1].IsAdjacentToMaelstromRoom = true; } catch { }
                     try { _rooms[row - 1, column].IsAdjacentToMaelstromRoom = true; } catch { }
                     try { _rooms[row - 1, column + 1].IsAdjacentToMaelstromRoom = true; } catch { }
@@ -283,7 +286,6 @@ public class Map
                     row = row + 1;
                     column = column - 2;
 
-                    //try { _rooms[row, column] = new MaelstromRoom(); } catch { }
                     if (row < 0 || column < 0)
                     {
                         _rooms[0, 5] = new MaelstromRoom();
@@ -294,6 +296,7 @@ public class Map
                     }
                 }
             }
+        SetUpMaelstromVicinity();
     }
 
     public bool PitInVicinity(Player player, Room room)
