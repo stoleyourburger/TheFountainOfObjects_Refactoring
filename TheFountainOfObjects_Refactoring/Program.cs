@@ -19,12 +19,13 @@ public class FountainOfObjectsGame
     {
         while (true)
         {
+
             Map.Render(Player);
 
             if (Player.IsAlive == false)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("LOL, you died!");
+                Console.WriteLine("You died.");
                 Console.ForegroundColor = ConsoleColor.White;
                 break;
             }
@@ -50,6 +51,14 @@ public class FountainOfObjectsGame
                     if (input == "s") return new Move(Direction.South);
                     if (input == "e") return new Move(Direction.East);
                     if (input == "w") return new Move(Direction.West);
+                    if ((input == "sn") && (Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
+                    if (input == "sn") { Console.WriteLine("You missed!"); continue; }
+                    if ((input == "ss") && (Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
+                    if (input == "ss") { Console.WriteLine("You missed!"); continue; }
+                    if ((input == "se") && (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
+                    if (input == "se") { Console.WriteLine("You missed!"); continue; }
+                    if ((input == "sw") && (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom)) return new Shoot(Direction.West);
+                    if (input == "sw") { Console.WriteLine("You missed!"); continue; }
                     if (input == "on") return new EnableFountain();
                     if (input == "off") return new DisableFountain();
                     Console.WriteLine($"I did not understand '{input}'.");
@@ -135,9 +144,7 @@ public class Sense : ISense
                     }
                 }
             }
-            
             Console.WriteLine("You got into maelstrom! Check where you happen to be now...");
-
         }
     }
 }
@@ -193,6 +200,40 @@ public class Move : ICommand
             Console.WriteLine("You cannot go there.");
         }
     }
+}
+
+public class Shoot : ICommand
+{
+    public Direction Direction { get; }
+
+    public Shoot(Direction direction)
+    {
+        Direction = direction;
+    }
+
+    public void Execute(FountainOfObjectsGame game)
+    {
+        Coordinate currentCoordinate = game.Player.Coordinate;
+        Room playersRoom = game.Map.GetRoom(game.Player.Coordinate);
+
+        if (game.Map.CanShoot(game.Player, playersRoom))
+        {
+            Room clearRoom = Direction switch
+            {
+                Direction.North => game.Map.SetRoom(currentCoordinate.Row - 1, currentCoordinate.Column, new EmptyRoom()),
+                Direction.South => game.Map.SetRoom(currentCoordinate.Row + 1, currentCoordinate.Column, new EmptyRoom()),
+                Direction.East => game.Map.SetRoom(currentCoordinate.Row, currentCoordinate.Column + 1, new EmptyRoom()),
+                Direction.West => game.Map.SetRoom(currentCoordinate.Row, currentCoordinate.Column - 1, new EmptyRoom()),
+                _ => throw new NotImplementedException(),
+            };
+            Console.Clear();
+            Console.WriteLine("You killed an Amarok!");
+            game.Map.SetUpAmarokVicinity();
+        }
+
+    }
+
+    
 }
 public class Player
 {
@@ -275,6 +316,11 @@ public class Map
                     try { _rooms[row + 1, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
                     try { _rooms[row + 1, column].IsAdjacentToAmarokRoom = true; } catch { }
                     try { _rooms[row + 1, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+
+                    try { _rooms[row - 1, column].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row + 1, column].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row, column - 1].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row, column + 1].IsAmarokShootingZone = true; } catch { }
                 }
 
         SetUpMaelstromVicinity();
@@ -295,6 +341,32 @@ public class Map
                     try { _rooms[row + 1, column].IsAdjacentToMaelstromRoom = true; } catch { }
                     try { _rooms[row + 1, column + 1].IsAdjacentToMaelstromRoom = true; } catch { }
                 }
+    }
+
+    public void SetUpAmarokVicinity()
+    {
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
+            {
+                _rooms[row, column].IsAdjacentToAmarokRoom = false;
+
+                if (_rooms[row, column] is AmarokRoom)
+                {
+                    try { _rooms[row - 1, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row - 1, column].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row - 1, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+
+                    try { _rooms[row - 1, column].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row + 1, column].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row, column - 1].IsAmarokShootingZone = true; } catch { }
+                    try { _rooms[row, column + 1].IsAmarokShootingZone = true; } catch { }
+                }
+            }
     }
 
     public void MaelstromMove(Player player)
@@ -348,6 +420,16 @@ public class Map
             return true;
         return false;
     }
+
+    public bool CanShoot(Player player, Room room)
+    {
+        Room playersRoom = GetRoom(player.Coordinate);
+        if ((playersRoom == room) && (room.IsAmarokShootingZone == true))
+            return true;
+        return false;
+    }
+
+
 
     public Room GetRoom(int row, int column) => _rooms[row, column];
     public Room GetRoom(Coordinate coordinate) => _rooms[coordinate.Row, coordinate.Column];
@@ -432,6 +514,7 @@ public abstract class Room
     public bool IsAdjacentToPitRoom { get; set; }
     public bool IsAdjacentToMaelstromRoom { get; set; }
     public bool IsAdjacentToAmarokRoom { get; set; }
+    public bool IsAmarokShootingZone { get; set; }
 }
 public class EmptyRoom : Room { }
 public class EntranceRoom : Room { }
