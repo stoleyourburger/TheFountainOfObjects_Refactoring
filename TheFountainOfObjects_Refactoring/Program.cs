@@ -1,5 +1,4 @@
-﻿
-new FountainOfObjectsGame().Run();
+﻿new FountainOfObjectsGame().Run();
 
 public class FountainOfObjectsGame
 {
@@ -19,9 +18,8 @@ public class FountainOfObjectsGame
     {
         while (true)
         {
-
+            Coordinate currentCoordinate = Player.Coordinate;
             Map.Render(Player);
-
             if (Player.IsAlive == false)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -51,14 +49,32 @@ public class FountainOfObjectsGame
                     if (input == "s") return new Move(Direction.South);
                     if (input == "e") return new Move(Direction.East);
                     if (input == "w") return new Move(Direction.West);
-                    if ((input == "sn") && (Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
-                    if (input == "sn") { Console.WriteLine("You missed!"); continue; }
-                    if ((input == "ss") && (Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
-                    if (input == "ss") { Console.WriteLine("You missed!"); continue; }
-                    if ((input == "se") && (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
-                    if (input == "se") { Console.WriteLine("You missed!"); continue; }
-                    if ((input == "sw") && (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom)) return new Shoot(Direction.West);
-                    if (input == "sw") { Console.WriteLine("You missed!"); continue; }
+                    if (input == "sn")
+                    {
+                        if (currentCoordinate.Row < 1) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        else if ((Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
+                        else { Console.WriteLine("You missed!"); continue; }
+
+                    }
+                    if (input == "ss")
+                    {
+                        if (currentCoordinate.Row == Map.Rows) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        else if ((Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
+                        else { Console.WriteLine("You missed!"); continue; }
+                    }
+                    if (input == "se")
+                    {
+                        if (currentCoordinate.Row == Map.Columns) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        else if ((Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
+                        else { Console.WriteLine("You missed!"); continue; }
+                    }
+                    if (input == "sw")
+                    {
+                        if (currentCoordinate.Column < 1) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        else if (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom) return new Shoot(Direction.West);
+                        else { Console.WriteLine("You missed!"); continue; }
+                    }
+
                     if (input == "on") return new EnableFountain();
                     if (input == "off") return new DisableFountain();
                     Console.WriteLine($"I did not understand '{input}'.");
@@ -233,7 +249,7 @@ public class Shoot : ICommand
 
     }
 
-    
+
 }
 public class Player
 {
