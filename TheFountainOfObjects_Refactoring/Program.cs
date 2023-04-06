@@ -6,6 +6,7 @@ public class FountainOfObjectsGame
     public Player Player { get; }
     public Sense Sense { get; }
     public FountainRoom fountainRoom = new FountainRoom();
+    
 
     public FountainOfObjectsGame()
     {
@@ -16,9 +17,23 @@ public class FountainOfObjectsGame
 
     public void Run()
     {
+        Console.WriteLine("You enter the Cavern of Objects, a maze of rooms filled with dangerous pits in search");
+        Console.WriteLine("of the Fountain of Objects.");
+        Console.WriteLine("Light is visible only in the entrance, and no other light is seen anywhere in the caverns.");
+        Console.WriteLine("You must navigate the Caverns with your other senses.");
+        Console.WriteLine("Find the Fountain of Objects, activate it, and return to the entrance.");
+        Console.WriteLine("");
+        Console.WriteLine("Look out for pits. You will feel a breeze if a pit is in an adjacent room. If you enter a room with a pit, you will die.");
+        Console.WriteLine("Maelstroms are violent forces of sentient wind. Entering a room with one could transport you to any other location in the caverns. You will be able to hear their growling and groaning in nearby rooms.");
+        Console.WriteLine("Amaroks roam the caverns. Encountering one is certain death, but you can smell their rotten stench in nearby rooms.");
+        Console.WriteLine("");
+        Console.WriteLine("You carry with you a bow and a quiver of arrows.");
+        Console.WriteLine("You can use them to shoot monsters in the caverns but be warned: you have a limited supply");
+
         while (true)
         {
             Coordinate currentCoordinate = Player.Coordinate;
+            
             Map.Render(Player);
             if (Player.IsAlive == false)
             {
@@ -35,7 +50,6 @@ public class FountainOfObjectsGame
                 Console.ForegroundColor = ConsoleColor.White;
                 break;
             }
-
             ICommand command = GetCommand();
             command.Execute(this);
             ICommand GetCommand()
@@ -45,43 +59,60 @@ public class FountainOfObjectsGame
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.WriteLine("What do you want to do? ");
                     string? input = Console.ReadLine();
-                    if (input == "n") return new Move(Direction.North);
-                    if (input == "s") return new Move(Direction.South);
-                    if (input == "e") return new Move(Direction.East);
-                    if (input == "w") return new Move(Direction.West);
-                    if (input == "sn")
+                    if (input == "north") return new Move(Direction.North);
+                    if (input == "south") return new Move(Direction.South);
+                    if (input == "east") return new Move(Direction.East);
+                    if (input == "west") return new Move(Direction.West);
+                    if (input == "shoot north" && Map.Arrows > 0)
                     {
-                        if (currentCoordinate.Row < 1) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        Map.Arrows--;
+                        if (currentCoordinate.Row < 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
                         else if ((Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
-                        else { Console.WriteLine("You missed!"); continue; }
+                        else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
 
                     }
-                    if (input == "ss")
+                    if (input == "shoot south" && Map.Arrows > 0)
                     {
-                        if (currentCoordinate.Row == Map.Rows) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        Map.Arrows--;
+                        if (currentCoordinate.Row == Map.Rows - 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
                         else if ((Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
-                        else { Console.WriteLine("You missed!"); continue; }
+                        else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
-                    if (input == "se")
+                    if (input == "shoot east" && Map.Arrows > 0)
                     {
-                        if (currentCoordinate.Row == Map.Columns) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        Map.Arrows--;
+                        if (currentCoordinate.Column == Map.Columns - 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
                         else if ((Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
-                        else { Console.WriteLine("You missed!"); continue; }
+                        else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
-                    if (input == "sw")
+                    if (input == "shoot west" && Map.Arrows > 0)
                     {
-                        if (currentCoordinate.Column < 1) { Console.WriteLine("Trying to shoot a wall, wise guy?"); continue; }
+                        Map.Arrows--;
+                        if (currentCoordinate.Column < 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
                         else if (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom) return new Shoot(Direction.West);
-                        else { Console.WriteLine("You missed!"); continue; }
+                        else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
-
+                    if ((input == "shoot north" && Map.Arrows == 0) || (input == "shoot south" && Map.Arrows == 0) || (input == "shoot east" && Map.Arrows == 0) || (input == "shoot west" && Map.Arrows == 0))
+                    {
+                        Console.Clear();
+                        Console.WriteLine("You are out of arrows!");
+                        Map.Render(Player);
+                        continue;
+                    }
                     if (input == "on") return new EnableFountain();
                     if (input == "off") return new DisableFountain();
+                    if (input == "help") { Console.Clear(); Help(); Map.Render(Player); continue; }
                     Console.WriteLine($"I did not understand '{input}'.");
                 }
             }
             Sense.SenseCheck(this, Player);
         }
+    }
+    public void Help()
+    {
+        Console.WriteLine("Possible directions: north / south / east / west");
+        Console.WriteLine("To shoot type: shoot north / south / east / west");
+        Console.WriteLine("When in fountain room: on / off");
     }
 }
 public interface ISense
@@ -267,9 +298,11 @@ public class Map
 
     public int Rows;
     public int Columns;
+    public int Arrows { get; set; }
 
     public Map()
     {
+        Arrows = 5;
         Console.Write("Choose map size (4, 6, 8): ");
         int input = Convert.ToInt32(Console.ReadLine());
         switch (input)
@@ -288,15 +321,17 @@ public class Map
 
         if (input == 4)
         {
-            _rooms[0, 2] = new FountainRoom();
+            _rooms[3, 3] = new FountainRoom();
             _rooms[2, 1] = new PitRoom();
+            _rooms[0, 2] = new MaelstromRoom();
+            _rooms[2, 2] = new AmarokRoom();
         }
         else if (input == 6)
         {
-            _rooms[5, 0] = new FountainRoom();
-            _rooms[5, 5] = new PitRoom();
-            _rooms[0, 5] = new MaelstromRoom();
-            _rooms[3, 3] = new AmarokRoom();
+            _rooms[5, 5] = new FountainRoom();
+            _rooms[1, 1] = new PitRoom();
+            _rooms[3, 2] = new MaelstromRoom();
+            _rooms[4, 5] = new AmarokRoom();
         }
         else if (input == 8)
         {
@@ -490,14 +525,14 @@ public class Map
             Console.WriteLine($"┌───┬───┬───┬───┬───┬───┐");
             Console.WriteLine($"│ {room[0, 0]} │ {room[0, 1]} │ {room[0, 2]} │ {room[0, 3]} │ {room[0, 4]} │ {room[0, 5]} │  {player.Coordinate}");
             Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
-            Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │ {room[1, 4]} │ {room[1, 5]} │  Possible input:");
-            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  n / s / e / w");
+            Console.WriteLine($"│ {room[1, 0]} │ {room[1, 1]} │ {room[1, 2]} │ {room[1, 3]} │ {room[1, 4]} │ {room[1, 5]} │  Possible directions:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  north / south / east / west");
             Console.WriteLine($"│ {room[2, 0]} │ {room[2, 1]} │ {room[2, 2]} │ {room[2, 3]} │ {room[2, 4]} │ {room[2, 5]} │  When in fountain room:");
             Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  on / off ");
-            Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │ {room[3, 4]} │ {room[3, 5]} │");
-            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"│ {room[3, 0]} │ {room[3, 1]} │ {room[3, 2]} │ {room[3, 3]} │ {room[3, 4]} │ {room[3, 5]} │  To shoot type:");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  shoot north/south/east/west");
             Console.WriteLine($"│ {room[4, 0]} │ {room[4, 1]} │ {room[4, 2]} │ {room[4, 3]} │ {room[4, 4]} │ {room[4, 5]} │");
-            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤");
+            Console.WriteLine($"├───┼───┼───┼───┼───┼───┤  Arrows left: {Arrows}");
             Console.WriteLine($"│ {room[5, 0]} │ {room[5, 1]} │ {room[5, 2]} │ {room[5, 3]} │ {room[5, 4]} │ {room[5, 5]} │");
             Console.WriteLine($"└───┴───┴───┴───┴───┴───┘");
         }
