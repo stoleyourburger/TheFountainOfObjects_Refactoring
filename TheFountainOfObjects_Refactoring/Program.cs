@@ -90,6 +90,11 @@ public class Sense : ISense
             player.IsAlive = false;
         }
 
+        if (playersRoom is AmarokRoom)
+        {
+            player.IsAlive = false;
+        }
+
         if (game.Map.PitInVicinity(player, playersRoom) == true)
         {
             Console.WriteLine("You feel a draft. There is a pit in a nearby room.");
@@ -99,6 +104,12 @@ public class Sense : ISense
         {
             Console.WriteLine("You hear the growling and groaning of a maelstrom nearby.");
         }
+
+        if (game.Map.AmarokInVicinity(player, playersRoom) == true)
+        {
+            Console.WriteLine("You can smell the rotten stench of an amarok in a nearby room.");
+        }
+
 
         if (playersRoom is MaelstromRoom)
         {
@@ -228,6 +239,7 @@ public class Map
             _rooms[5, 0] = new FountainRoom();
             _rooms[5, 5] = new PitRoom();
             _rooms[0, 5] = new MaelstromRoom();
+            _rooms[3, 3] = new AmarokRoom();
         }
         else if (input == 8)
         {
@@ -249,6 +261,20 @@ public class Map
                     try { _rooms[row + 1, column - 1].IsAdjacentToPitRoom = true; } catch { }
                     try { _rooms[row + 1, column].IsAdjacentToPitRoom = true; } catch { }
                     try { _rooms[row + 1, column + 1].IsAdjacentToPitRoom = true; } catch { }
+                }
+
+        for (int row = 0; row < Rows; row++)
+            for (int column = 0; column < Columns; column++)
+                if (_rooms[row, column] is AmarokRoom)
+                {
+                    try { _rooms[row - 1, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row - 1, column].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row - 1, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column - 1].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column].IsAdjacentToAmarokRoom = true; } catch { }
+                    try { _rooms[row + 1, column + 1].IsAdjacentToAmarokRoom = true; } catch { }
                 }
 
         SetUpMaelstromVicinity();
@@ -311,6 +337,14 @@ public class Map
     {
         Room playersRoom = GetRoom(player.Coordinate);
         if ((playersRoom == room) && (room.IsAdjacentToMaelstromRoom == true))
+            return true;
+        return false;
+    }
+
+    public bool AmarokInVicinity(Player player, Room room)
+    {
+        Room playersRoom = GetRoom(player.Coordinate);
+        if ((playersRoom == room) && (room.IsAdjacentToAmarokRoom == true))
             return true;
         return false;
     }
@@ -397,6 +431,7 @@ public abstract class Room
 {
     public bool IsAdjacentToPitRoom { get; set; }
     public bool IsAdjacentToMaelstromRoom { get; set; }
+    public bool IsAdjacentToAmarokRoom { get; set; }
 }
 public class EmptyRoom : Room { }
 public class EntranceRoom : Room { }
@@ -407,6 +442,7 @@ public class FountainRoom : Room
 }
 public class PitRoom : Room { }
 public class MaelstromRoom : Room { }
+public class AmarokRoom : Room { }
 
 public record Coordinate(int Row, int Column)
 {
