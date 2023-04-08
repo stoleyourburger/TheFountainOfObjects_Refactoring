@@ -6,7 +6,6 @@ public class FountainOfObjectsGame
     public Player Player { get; }
     public Sense Sense { get; }
     public FountainRoom fountainRoom = new FountainRoom();
-    
 
     public FountainOfObjectsGame()
     {
@@ -17,7 +16,7 @@ public class FountainOfObjectsGame
 
     public void Run()
     {
-        Console.WriteLine("You enter the Cavern of Objects, a maze of rooms filled with dangerous pits in search");
+        Console.WriteLine("You enter the Cavern of Objects, a maze of rooms filled with dangerous pits in search.");
         Console.WriteLine("of the Fountain of Objects.");
         Console.WriteLine("Light is visible only in the entrance, and no other light is seen anywhere in the caverns.");
         Console.WriteLine("You must navigate the Caverns with your other senses.");
@@ -28,12 +27,12 @@ public class FountainOfObjectsGame
         Console.WriteLine("Amaroks roam the caverns. Encountering one is certain death, but you can smell their rotten stench in nearby rooms.");
         Console.WriteLine("");
         Console.WriteLine("You carry with you a bow and a quiver of arrows.");
-        Console.WriteLine("You can use them to shoot monsters in the caverns but be warned: you have a limited supply");
+        Console.WriteLine("You can use them to shoot monsters in the caverns but be warned: you have a limited supply.");
 
         while (true)
         {
             Coordinate currentCoordinate = Player.Coordinate;
-            
+
             Map.Render(Player);
             if (Player.IsAlive == false)
             {
@@ -63,33 +62,37 @@ public class FountainOfObjectsGame
                     if (input == "south") return new Move(Direction.South);
                     if (input == "east") return new Move(Direction.East);
                     if (input == "west") return new Move(Direction.West);
+                    if ((input == "shoot north" && Map.Arrows > 0 && currentCoordinate.Row < 1) ||
+                        (input == "shoot south" && Map.Arrows > 0 && currentCoordinate.Row == Map.Rows - 1) ||
+                        (input == "shoot east" && Map.Arrows > 0 && currentCoordinate.Column == Map.Columns - 1) ||
+                        (input == "shoot west" && Map.Arrows > 0 && currentCoordinate.Column < 1))
+                    {
+                        Map.Arrows--;
+                        Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue;
+                    }
                     if (input == "shoot north" && Map.Arrows > 0)
                     {
                         Map.Arrows--;
-                        if (currentCoordinate.Row < 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
-                        else if ((Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
+                        if ((Map.GetRoom(Player.Coordinate.Row - 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.North);
                         else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
 
                     }
                     if (input == "shoot south" && Map.Arrows > 0)
                     {
                         Map.Arrows--;
-                        if (currentCoordinate.Row == Map.Rows - 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
-                        else if ((Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
+                        if ((Map.GetRoom(Player.Coordinate.Row + 1, Player.Coordinate.Column) is AmarokRoom)) return new Shoot(Direction.South);
                         else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
                     if (input == "shoot east" && Map.Arrows > 0)
                     {
                         Map.Arrows--;
-                        if (currentCoordinate.Column == Map.Columns - 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
-                        else if ((Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
+                        if ((Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column + 1) is AmarokRoom)) return new Shoot(Direction.East);
                         else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
                     if (input == "shoot west" && Map.Arrows > 0)
                     {
                         Map.Arrows--;
-                        if (currentCoordinate.Column < 1) { Console.Clear(); Console.WriteLine("Trying to shoot a wall, wise guy?"); Map.Render(Player); continue; }
-                        else if (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom) return new Shoot(Direction.West);
+                        if (Map.GetRoom(Player.Coordinate.Row, Player.Coordinate.Column - 1) is AmarokRoom) return new Shoot(Direction.West);
                         else { Console.Clear(); Console.WriteLine("You missed!"); Map.Render(Player); continue; }
                     }
                     if ((input == "shoot north" && Map.Arrows == 0) || (input == "shoot south" && Map.Arrows == 0) || (input == "shoot east" && Map.Arrows == 0) || (input == "shoot west" && Map.Arrows == 0))
